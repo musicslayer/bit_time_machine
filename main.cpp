@@ -18,19 +18,11 @@ FILE *fp;
 char inputfile[100];
 char outputfile[100];
 char backupfile[100];
-char ppp;
 char state[NUMBEROFSTATES][MAXFILESIZE];
-char i[10];
-char j[10];
-
-int t4;
-int s = 0;
-int c1;
-int c2;
-int current;
-int c;
-int t = 0;
 int sizeofstate[NUMBEROFSTATES];
+
+int s = 0;
+int current;
 
 void clearScreen(void);
 void textRead(char[1000]);
@@ -40,13 +32,7 @@ int main() {
     while(true) {
         clearScreen();
 
-        t4 = 0;
-        s = 0;
-        c1 = 0;
-        c2 = 0;
         current = 0;
-        c = 0;
-        t = 0;
 
         //memset(backupfile, '\0', 100);
         backupfile[0] = '\0';
@@ -79,15 +65,15 @@ int main() {
         // If the backup file exists
         if(fp != NULL) {
             fseek(fp, 0, SEEK_SET); 
-            for(c1 = 0; c1 < NUMBEROFSTATES; c1++) {
+            for(int c1 = 0; c1 < NUMBEROFSTATES; c1++) {
                 fscanf(fp, "%i", &sizeofstate[c1]);  
-                fread(&state[c1][c2], 1, 1, fp);  
-                for(c2 = 0; c2 < sizeofstate[c1]; c2++) {
+                fread(&state[c1][0], 1, 1, fp);  
+                for(int c2 = 0; c2 < sizeofstate[c1]; c2++) {
                     fread(&state[c1][c2], 1, 1, fp);  
                 }
 
                 if(feof(fp) != 0) {
-                    current = s-1;
+                    current = s - 1;
                     break;
                 }
 
@@ -112,8 +98,10 @@ int main() {
             //Display info
             updateDisplay();
 
+            char i;
+
             while(true) {
-                c = time(NULL);
+                int c = time(NULL);
                 while(time(NULL) - c < .1);
 
                 textRead(inputfile);
@@ -127,89 +115,89 @@ int main() {
                 }
 
                 if(_kbhit()) {
-                    i[0] = _getch();
-                    printf("%c", i[0]);
+                    i = _getch();
+                    printf("%c", &i);
                     break;
                 }
             }
-        }
 
-        if(i[0] == 's') {
-            if(s < NUMBEROFSTATES) {
-                //Save current input file state to first unused spot
-                textRead(inputfile);
+            if(i == 's') {
+                if(s < NUMBEROFSTATES) {
+                    //Save current input file state to first unused spot
+                    textRead(inputfile);
 
-                //printf("Saved state.");
-                current = s;
-                s++;
+                    //printf("Saved state.");
+                    current = s;
+                    s++;
+                }
             }
-        }
 
-        else if(i[0] == 'r') {
-            //Restore a saved state to the output file
+            else if(i == 'r') {
+                //Restore a saved state to the output file
 
-            while(true) {
-                updateDisplay();
-                printf("\nSelect a state to restore.");
+                while(true) {
+                    updateDisplay();
+                    printf("\nSelect a state to restore.");
 
-                // Select state
-                j[0] = '\n';
-                while(j[0] == '\n') {
-                    fgets(j, 10, stdin);
-                }
+                    // Select state
+                    char j = '\n';
+                    while(j == '\n') {
+                        fgets(&j, 10, stdin);
+                    }
 
-                if(j[0] == '0') {
-                    //current = 0;
-                    fp = fopen(outputfile, "wb");
-                    //fp = _fdopen(_open(outputfile, _O_WRONLY, _O_BINARY), "wb");
-                    //fwrite(state[current], 1, sizeofstate[current], fp);
-                    fwrite(state[0], 1, sizeofstate[0], fp);
-                    fclose(fp);
-                    //printf("Restored state.");
-                    break;
-                }
-                else {
-                    c1 = atoi(j);
-                    if(c1 < s && c1 > 0) {
-                        //current = c1;
+                    if(j == '0') {
+                        //current = 0;
                         fp = fopen(outputfile, "wb");
                         //fp = _fdopen(_open(outputfile, _O_WRONLY, _O_BINARY), "wb");
                         //fwrite(state[current], 1, sizeofstate[current], fp);
-                        fwrite(state[c1], 1, sizeofstate[c1], fp);
+                        fwrite(state[0], 1, sizeofstate[0], fp);
                         fclose(fp);
                         //printf("Restored state.");
                         break;
                     }
                     else {
-                        //printf("Invalid state.");
+                        int c1 = atoi(&j);
+                        if(c1 < s && c1 > 0) {
+                            //current = c1;
+                            fp = fopen(outputfile, "wb");
+                            //fp = _fdopen(_open(outputfile, _O_WRONLY, _O_BINARY), "wb");
+                            //fwrite(state[current], 1, sizeofstate[current], fp);
+                            fwrite(state[c1], 1, sizeofstate[c1], fp);
+                            fclose(fp);
+                            //printf("Restored state.");
+                            break;
+                        }
+                        else {
+                            //printf("Invalid state.");
+                        }
                     }
                 }
             }
-        }
 
-        else if(i[0] == 'b') {
-            // Backup all used states to backup file
-            fp = fopen(backupfile, "wb");
-            //fp = _fdopen(_open(backupfile, _O_WRONLY, _O_BINARY), "rb");
-            for(c1 = 0; c1 < s; c1++) {
-                fprintf(fp, "%i\n", sizeofstate[c1]);  
-                for(c2 = 0; c2 < sizeofstate[c1]; c2++) {
-                    fwrite(&state[c1][c2], 1, 1, fp);
+            else if(i == 'b') {
+                // Backup all used states to backup file
+                fp = fopen(backupfile, "wb");
+                //fp = _fdopen(_open(backupfile, _O_WRONLY, _O_BINARY), "rb");
+                for(int c1 = 0; c1 < s; c1++) {
+                    fprintf(fp, "%i\n", sizeofstate[c1]);  
+                    for(int c2 = 0; c2 < sizeofstate[c1]; c2++) {
+                        fwrite(&state[c1][c2], 1, 1, fp);
+                    }
                 }
+                fclose(fp);
             }
-            fclose(fp);
-        }
 
-        else if(i[0] == 'q') {
-            break;
-        }
+            else if(i == 'q') {
+                break;
+            }
 
-        else if(i[0] == 'z') {
-            return 0;
-        }
+            else if(i == 'z') {
+                return 0;
+            }
 
-        else {
-            //printf("Invalid command.");
+            else {
+                //printf("Invalid command.");
+            }
         }
     }
 }
@@ -222,9 +210,10 @@ void textRead(char filename[1000]) {
     // Write contents of file "filename" to the current state
     fp = _fdopen(_sopen(filename, _O_RDONLY, _SH_DENYNO), "rb");
     fseek(fp, 0, SEEK_SET); 
-    t4 = 0;
 
+    int t4 = 0;
     while(t4 < MAXFILESIZE) {
+        char ppp;
         fread(&ppp, 1, 1, fp); 
         if(feof(fp) != 0) {
             break;
@@ -246,10 +235,10 @@ void updateDisplay(void) {
     printf("Backup file = %s\n", backupfile);
     printf("0");
 
-    for(c1 = 1; c1 < s; c1++) {
+    for(int c1 = 1; c1 < s; c1++) {
         printf(" %i", c1);
     }
-    for(c1 = s; c1 < NUMBEROFSTATES - 1; c1++) {
+    for(int c1 = s; c1 < NUMBEROFSTATES - 1; c1++) {
         printf(" X");
     }
     printf("\nCurrent state = %i", current);
