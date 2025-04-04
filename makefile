@@ -1,5 +1,26 @@
 # Command Line Options
-AT = $(if $(VERBOSE),,@)
+# Set VERBOSE=1 to see all output, otherwise everything except errors will be suppressed.
+AT = $(if $(filter 1,$(VERBOSE)),,@)
+
+# OS and Architecture
+OS_FULL_NAME := $(shell uname -s)
+OS_NAME =
+ifeq ($(OS_FULL_NAME),Linux)
+    OS_NAME = linux
+endif
+ifeq ($(OS_FULL_NAME),Darwin)
+    OS_NAME = mac
+endif
+ifneq (,$(findstring MINGW,$(OS_FULL_NAME)))
+    OS_NAME = win
+endif
+
+ifeq ($(strip $(OS_NAME)),)
+    $(error Unsupported OS: $(OS_FULL_NAME))
+endif
+
+ARCH_NAME := $(shell uname -m)
+OS_ARCH_NAME = $(OS_NAME)_$(ARCH_NAME)
 
 # Tools
 CLANG_FORMAT := clang-format
@@ -19,15 +40,25 @@ HDRS := $(shell bash -c 'shopt -s globstar nullglob; echo $(HDR_DIR)/**/*.h')
 # Compiler
 CXX := g++
 
-CXXFLAGS := -I $(HDR_DIR) -std=c++20 -Wall -Wextra -Werror -Wpedantic -MMD -MP
-CXXFLAGS_LINT := $(CXXFLAGS) -Wno-unknown-warning-option
-CXXFLAGS_RELEASE := $(CXXFLAGS) -mconsole -O2
-CXXFLAGS_DEBUG := $(CXXFLAGS) -mconsole -g -O0
+CXXFLAGS := -I $(HDR_DIR) -std=c++20 -Wall -Wextra -Werror -Wpedantic -MMD -MP -mconsole
+ifeq ($(OS_NAME),linux)
+    CXXFLAGS += -DLINUX
+endif
+ifeq ($(OS_NAME),mac)
+    CXXFLAGS += -DMACOS
+endif
+ifeq ($(OS_NAME),win)
+    CXXFLAGS += -DWIN32 -pthread -static -static-libgcc -static-libstdc++
+endif
+
+CXXFLAGS_LINT := $(CXXFLAGS) -Wno-unknown-warning-option -Wno-unused-command-line-argument
+CXXFLAGS_RELEASE := $(CXXFLAGS) -O2
+CXXFLAGS_DEBUG := $(CXXFLAGS) -g -O0
 
 # Output
 OUTPUT_DIR := output
-BUILD_DIR := $(OUTPUT_DIR)/build
-BIN_DIR := $(OUTPUT_DIR)/bin
+BUILD_DIR := $(OUTPUT_DIR)/$(OS_ARCH_NAME)/build
+BIN_DIR := $(OUTPUT_DIR)/$(OS_ARCH_NAME)/bin
 
 BUILD_DIR_RELEASE := $(BUILD_DIR)/release
 BUILD_DIR_DEBUG := $(BUILD_DIR)/debug
