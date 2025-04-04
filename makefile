@@ -88,7 +88,8 @@ help:
 	@echo "  make rebuild   - Clean and rebuild everything"
 	@echo "  make release   - Build the release version"
 	@echo "  make run       - Build and run the release version"
-	@echo "  make run-debug - Build and run the debug version in gdb"
+	@echo "  make run-debug - Build and run the debug version"
+	@echo "  make run-gdb   - Build and run the debug version in gdb"
 
 .PHONY: lint
 lint:
@@ -107,4 +108,8 @@ run: release
 
 .PHONY: run-debug
 run-debug: debug
+	@$(BIN_DIR_DEBUG)/$(APP_NAME_DEBUG)
+
+.PHONY: run-gdb
+run-gdb: debug
 	@gdb --args $(BIN_DIR_DEBUG)/$(APP_NAME_DEBUG)
