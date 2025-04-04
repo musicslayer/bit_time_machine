@@ -3,8 +3,7 @@
 
 class App {
 public:
-    void run();
-
+    static void run();
 };
 
 #endif // APP_H

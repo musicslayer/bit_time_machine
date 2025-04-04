@@ -8,7 +8,8 @@ public:
         //Display info
         clearScreen();
 
-        std::cout << std::format("Input file = {}\nOutput file = {}\n0", inputfile, outputfile);
+        std::cout << std::format("Input file = {}\nOutput file = {}\n0",
+        inputfile, outputfile);
 
         for(int c1 = 1; c1 < s; c1++) {
             std::cout << std::format(" {}", c1);
@@ -22,11 +23,10 @@ public:
         std::cout << std::flush;
 
         // Ask user what they want to do
-        std::cout << "\nPress s to save state, r to restore state, b to backup states, q to quit." << std::endl;
+        std::cout << "\nPress s to save state, r to restore state, b to backup
+        states, q to quit." << std::endl;
         */
     }
 
-    void clearScreen() {
-        std::cout << "\033[2J\033[H";
-    }
+    void clearScreen() { std::cout << "\033[2J\033[H"; }
 };

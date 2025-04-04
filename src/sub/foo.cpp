@@ -1,5 +1,3 @@
 #include <iostream>
 
-void foo() {
-    std::cout << "HELLO!" << std::endl;
-}
+void foo() { std::cout << "HELLO!" << std::endl; }

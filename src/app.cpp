@@ -2,6 +2,4 @@
 
 #include <iostream>
 
-void App::run() {
-    std::cout << "RUN!" << std::endl;
-}
+void App::run() { std::cout << "RUN!\n"; }
