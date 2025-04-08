@@ -40,20 +40,22 @@ HDRS := $(shell bash -c 'shopt -s globstar nullglob; echo $(HDR_DIR)/**/*.h')
 # Compiler
 CXX := g++
 
-CXXFLAGS := -I $(HDR_DIR) -std=c++20 -Wall -Wextra -Werror -Wpedantic -MMD -MP -mconsole
+BASE_FLAGS := -I $(HDR_DIR) -std=c++20 -Wall -Wextra -Werror -Wpedantic -MMD -MP
+BUILD_FLAGS :=
 ifeq ($(OS_NAME),linux)
-    CXXFLAGS += -DLINUX
+    BASE_FLAGS += -DLINUX
 endif
 ifeq ($(OS_NAME),mac)
-    CXXFLAGS += -DMACOS
+    BASE_FLAGS += -DMACOS
 endif
 ifeq ($(OS_NAME),win)
-    CXXFLAGS += -DWIN32 -pthread -static -static-libgcc -static-libstdc++
+    BASE_FLAGS += -DWIN32
+	BUILD_FLAGS += -mconsole -pthread -static -static-libgcc -static-libstdc++
 endif
 
-CXXFLAGS_LINT := $(CXXFLAGS) -Wno-unknown-warning-option -Wno-unused-command-line-argument
-CXXFLAGS_RELEASE := $(CXXFLAGS) -O2
-CXXFLAGS_DEBUG := $(CXXFLAGS) -g -O0
+CXXFLAGS_LINT := $(BASE_FLAGS)
+CXXFLAGS_RELEASE := $(BASE_FLAGS) $(BUILD_FLAGS) -O2
+CXXFLAGS_DEBUG := $(BASE_FLAGS) $(BUILD_FLAGS) -g -O0
 
 # Output
 OUTPUT_DIR := output
@@ -72,7 +74,9 @@ DEPS_RELEASE := $(OBJS_RELEASE:.o=.d)
 DEPS_DEBUG := $(OBJS_DEBUG:.o=.d)
 -include $(DEPS_RELEASE) $(DEPS_DEBUG)
 
-# Build Rules
+# Targets
+.DEFAULT_GOAL := all
+
 $(BUILD_DIR_RELEASE)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(AT)$(CXX) $(CXXFLAGS_RELEASE) -c $< -o $@
@@ -89,8 +93,17 @@ $(BIN_DIR_DEBUG)/$(APP_NAME_DEBUG): $(OBJS_DEBUG)
 	@mkdir -p $(dir $@)
 	$(AT)$(CXX) $(CXXFLAGS_DEBUG) $^ -o $@
 
-# Targets
-.DEFAULT_GOAL := all
+$(SRC_DIR)/%.format: $(SRC_DIR)/%.cpp
+	@$(CLANG_FORMAT) -i $< > /dev/null 2>&1 || true
+
+$(HDR_DIR)/%.format: $(HDR_DIR)/%.h
+	@$(CLANG_FORMAT) -i $< > /dev/null 2>&1 || true
+
+$(SRC_DIR)/%.lint: $(SRC_DIR)/%.cpp
+	@$(CLANG_TIDY) --quiet $< -- -x c++ $(CXXFLAGS_LINT) || true
+
+$(HDR_DIR)/%.lint: $(HDR_DIR)/%.h
+	@$(CLANG_TIDY) --quiet $< -- -x c++ $(CXXFLAGS_LINT) || true
 
 .PHONY: all
 all: release debug
@@ -103,9 +116,7 @@ clean:
 debug: $(BIN_DIR_DEBUG)/$(APP_NAME_DEBUG)
 
 .PHONY: format
-format:
-	@echo "Formatting source files..."
-	@$(CLANG_FORMAT) -i $(SRCS) $(HDRS)
+format: $(SRCS:.cpp=.format) $(HDRS:.h=.format)
 
 .PHONY: help
 help:
@@ -116,19 +127,13 @@ help:
 	@echo "  make format    - Run the formatter (uses .clang-format)"
 	@echo "  make help      - View all available targets"
 	@echo "  make lint      - Run the linter (uses .clang-tidy)"
-	@echo "  make rebuild   - Clean and rebuild everything"
 	@echo "  make release   - Build the release version"
 	@echo "  make run       - Build and run the release version"
 	@echo "  make run-debug - Build and run the debug version"
 	@echo "  make run-gdb   - Build and run the debug version in gdb"
 
 .PHONY: lint
-lint:
-	@echo "Linting source files..."
-	@$(CLANG_TIDY) --quiet $(SRCS) $(HDRS) -- -x c++ $(CXXFLAGS_LINT)
-
-.PHONY: rebuild
-rebuild: clean all
+lint: $(SRCS:.cpp=.lint) $(HDRS:.h=.lint)
 
 .PHONY: release
 release: $(BIN_DIR_RELEASE)/$(APP_NAME_RELEASE)

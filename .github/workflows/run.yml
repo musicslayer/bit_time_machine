@@ -1,0 +1,106 @@
+name: C++ Cross-Platform Run
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run-linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          if ! dpkg -s g++ &>/dev/null; then
+            sudo apt-get install -y g++
+          fi
+
+      - name: Rebuild
+        run: |
+          make clean
+          make -j all VERBOSE=1
+
+      - name: Run release version
+        run: make run 2>&1 | tee run-linux-output.txt
+
+      - name: Upload run results
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-linux-output
+          path: run-linux-output.txt
+
+  run-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install tools
+        run: |
+          brew list gcc &>/dev/null || brew install gcc
+          brew list bash &>/dev/null || brew install bash
+
+      - name: Update path
+        run: |
+          if [ -x /opt/homebrew/bin ]; then
+            echo "/opt/homebrew/bin" >> $GITHUB_PATH
+          elif [ -x /usr/local/bin ]; then
+            echo "/usr/local/bin" >> $GITHUB_PATH
+          else
+            echo "Bin folder not found. Exiting."
+            exit 1
+          fi
+
+      - name: Rebuild
+        run: |
+          make clean
+          make -j all VERBOSE=1
+
+      - name: Run release version
+        run: make run 2>&1 | tee run-macos-output.txt
+
+      - name: Upload run results
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-macos-output
+          path: run-macos-output.txt
+
+  run-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install tools
+        run: |
+          if ! command -v g++ &>/dev/null; then
+            powershell -Command "choco install mingw -y"
+          fi
+
+      - name: Update path
+        run: echo "C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw64\\bin" >> $GITHUB_PATH
+
+      - name: Rebuild
+        run: |
+          make clean
+          make -j all VERBOSE=1
+
+      - name: Run release version
+        run: make run 2>&1 | tee run-windows-output.txt
+
+      - name: Upload run results
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-windows-output
+          path: run-windows-output.txt

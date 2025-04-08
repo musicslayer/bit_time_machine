@@ -1,0 +1,79 @@
+name: C++ Cross-Platform Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          if ! dpkg -s g++ &>/dev/null; then
+            sudo apt-get install -y g++
+          fi
+
+      - name: Rebuild
+        run: |
+          make clean
+          make -j all VERBOSE=1
+
+  build-macos:
+    runs-on: macos-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install tools
+        run: |
+          brew list gcc &>/dev/null || brew install gcc
+          brew list bash &>/dev/null || brew install bash
+
+      - name: Update path
+        run: |
+          if [ -x /opt/homebrew/bin ]; then
+            echo "/opt/homebrew/bin" >> $GITHUB_PATH
+          elif [ -x /usr/local/bin ]; then
+            echo "/usr/local/bin" >> $GITHUB_PATH
+          else
+            echo "Bin folder not found. Exiting."
+            exit 1
+          fi
+
+      - name: Rebuild
+        run: |
+          make clean
+          make -j all VERBOSE=1
+
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Install tools
+        run: |
+          if ! command -v g++ &>/dev/null; then
+            powershell -Command "choco install mingw -y"
+          fi
+
+      - name: Update path
+        run: echo "C:\\ProgramData\\chocolatey\\lib\\mingw\\tools\\install\\mingw64\\bin" >> $GITHUB_PATH
+
+      - name: Rebuild
+        run: |
+          make clean
+          make -j all VERBOSE=1
