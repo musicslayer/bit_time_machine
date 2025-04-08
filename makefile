@@ -6,17 +6,17 @@ AT = $(if $(filter 1,$(VERBOSE)),,@)
 OS_FULL_NAME := $(shell uname -s)
 OS_NAME =
 ifeq ($(OS_FULL_NAME),Linux)
-    OS_NAME = linux
+	OS_NAME = linux
 endif
 ifeq ($(OS_FULL_NAME),Darwin)
-    OS_NAME = mac
+	OS_NAME = mac
 endif
 ifneq (,$(findstring MINGW,$(OS_FULL_NAME)))
-    OS_NAME = win
+	OS_NAME = win
 endif
 
 ifeq ($(strip $(OS_NAME)),)
-    $(error Unsupported OS: $(OS_FULL_NAME))
+	$(error Unsupported OS: $(OS_FULL_NAME))
 endif
 
 ARCH_NAME := $(shell uname -m)
@@ -43,13 +43,13 @@ CXX := g++
 BASE_FLAGS := -I $(HDR_DIR) -std=c++20 -Wall -Wextra -Werror -Wpedantic -MMD -MP
 BUILD_FLAGS :=
 ifeq ($(OS_NAME),linux)
-    BASE_FLAGS += -DLINUX
+	BASE_FLAGS += -DLINUX
 endif
 ifeq ($(OS_NAME),mac)
-    BASE_FLAGS += -DMACOS
+	BASE_FLAGS += -DMACOS
 endif
 ifeq ($(OS_NAME),win)
-    BASE_FLAGS += -DWIN32
+	BASE_FLAGS += -DWIN32
 	BUILD_FLAGS += -mconsole -pthread -static -static-libgcc -static-libstdc++
 endif
 

@@ -20,7 +20,7 @@ FileState FileState::fromFile(const std::string& filename) {
 
     FileState fileState = FileState();
     fileState.data = std::vector<std::byte>(size);
-    if (!file.read(reinterpret_cast<char*>(fileState.data.data()), size)) {
+    if(!file.read(reinterpret_cast<char*>(fileState.data.data()), size)) {
         throw std::runtime_error("Failed to read file");
     }
 
@@ -33,7 +33,8 @@ void FileState::toFile(const std::string& filename) {
         throw std::runtime_error("Failed to open file for writing");
     }
 
-    file.write(reinterpret_cast<const char*>(this->data.data()), this->data.size());
+    file.write(reinterpret_cast<const char*>(this->data.data()),
+               this->data.size());
     if(!file) {
         throw std::runtime_error("Failed to write data to file");
     }
